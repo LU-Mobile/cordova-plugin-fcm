@@ -100,6 +100,23 @@ NSString *const kGCMMessageIDKey = @"gcm.message_id";
     // Add observer for InstanceID token refresh callback.
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tokenRefreshNotification:)
                                                  name:kFIRInstanceIDTokenRefreshNotification object:nil];
+
+    NSDictionary *notification = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+    if (notification) {
+        NSLog(@"app recieved notification from remote%@",notification);
+
+        NSError *error;
+        NSDictionary *notificationMutable = [notification mutableCopy];
+
+        [notificationMutable setValue:@(YES) forKey:@"wasTapped"];
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:notificationMutable
+                                                           options:0
+                                                             error:&error];
+        NSLog(@"APP WAS CLOSED DURING PUSH RECEPTION Saved data: %@", jsonData);
+        lastPush = jsonData;
+        [FCMPlugin.fcmPlugin notifyOfMessage:jsonData];
+    }
+
     return YES;
 }
 
@@ -119,17 +136,17 @@ NSString *const kGCMMessageIDKey = @"gcm.message_id";
     if (userInfo[kGCMMessageIDKey]) {
         NSLog(@"Message ID 1: %@", userInfo[kGCMMessageIDKey]);
     }
-    
+
     // Print full message.
     NSLog(@"%@", userInfo);
-    
+
     NSError *error;
     NSDictionary *userInfoMutable = [userInfo mutableCopy];
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:userInfoMutable
                                                        options:0
                                                          error:&error];
     [FCMPlugin.fcmPlugin notifyOfMessage:jsonData];
-    
+
     // Change this to your preferred presentation option
     completionHandler(UNNotificationPresentationOptionNone);
 }
@@ -142,21 +159,21 @@ didReceiveNotificationResponse:(UNNotificationResponse *)response
     if (userInfo[kGCMMessageIDKey]) {
         NSLog(@"Message ID 2: %@", userInfo[kGCMMessageIDKey]);
     }
-    
+
     // Print full message.
     NSLog(@"aaa%@", userInfo);
-    
+
     NSError *error;
     NSDictionary *userInfoMutable = [userInfo mutableCopy];
-    
+
 
         NSLog(@"New method with push callback: %@", userInfo);
-        
+
         [userInfoMutable setValue:@(YES) forKey:@"wasTapped"];
         NSData *jsonData = [NSJSONSerialization dataWithJSONObject:userInfoMutable
                                                            options:0
                                                              error:&error];
-        NSLog(@"APP WAS CLOSED DURING PUSH RECEPTION Saved data: %@", jsonData);
+        NSLog(@"APP WAS IN BACKGROUND DURING PUSH RECEPTION Saved data: %@", jsonData);
         lastPush = jsonData;
 
     
